@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {View} from 'react-native';
+import { View, ViewPropTypes } from 'react-native';
 import PropTypes from 'prop-types'
 import xmldom from 'xmldom';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
@@ -7,7 +7,7 @@ import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource'
 import Svg,{
     Circle,
     Ellipse,
-    G ,
+    G,
     LinearGradient,
     RadialGradient,
     Line,
@@ -61,7 +61,7 @@ const POLYLINE_ATTS = ['points'];
 
 const COMMON_ATTS = ['fill', 'fillOpacity', 'stroke', 'strokeWidth', 'strokeOpacity', 'opacity',
     'strokeLinecap', 'strokeLinejoin',
-    'strokeDasharray', 'strokeDashoffset', 'x', 'y', 'rotate', 'scale', 'origin', 'originX', 'originY'];
+    'strokeDasharray', 'strokeDashoffset', 'x', 'y', 'rotate', 'scale', 'origin', 'originX', 'originY', 'transform'];
 
 let ind = 0;
 
@@ -127,26 +127,33 @@ class SvgUri extends Component{
 
   async fetchSVGData(uri){
     let responseXML = null;
+    let error = null;
     try {
       const response = await fetch(uri);
       responseXML = await response.text();
     } catch(e) {
+      error = e;
       console.error("ERROR SVG", e);
     } finally {
       if (this.isComponentMounted) {
-        this.setState({svgXmlData:responseXML});
+        this.setState({svgXmlData:responseXML}, () => {
+          const { onLoad } = this.props;
+          if (onLoad && !error) {
+            onLoad();
+          }
+        });
       }
     }
 
     return responseXML;
   }
-   
-  // Remove empty strings from children array  
+
+  // Remove empty strings from children array
   trimElementChilden(children) {
     for (child of children) {
       if (typeof child === 'string') {
         if (child.trim.length === 0)
-          children.splice(children.indexOf(child), 1); 
+          children.splice(children.indexOf(child), 1);
       }
     }
   }
@@ -165,7 +172,9 @@ class SvgUri extends Component{
         componentAtts.height = this.props.height;
       }
 
-      return <Svg key={i} {...componentAtts}>{childs}</Svg>;
+      return <Svg key={i} {...componentAtts} ref={svg => {
+        this.props.svgRef && this.props.svgRef(svg)
+      }}>{childs}</Svg>;
     case 'g':
       componentAtts = this.obtainComponentAtts(node, G_ATTS);
       return <G key={i} {...componentAtts}>{childs}</G>;
@@ -220,6 +229,9 @@ class SvgUri extends Component{
 
   obtainComponentAtts({attributes}, enabledAttributes) {
     const styleAtts = {};
+    if (this.state.fill) {
+      styleAtts.fill = this.state.fill;
+    }
     Array.from(attributes).forEach(({nodeName, nodeValue}) => {
       Object.assign(styleAtts, utils.transformStyle({
         nodeName,
@@ -297,12 +309,14 @@ class SvgUri extends Component{
 }
 
 SvgUri.propTypes = {
-  style: PropTypes.object,
+  style: ViewPropTypes.style,
   width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   svgXmlData: PropTypes.string,
   source: PropTypes.any,
   fill: PropTypes.string,
+  onLoad: PropTypes.func,
+  svgRef: PropTypes.func,
 }
 
 module.exports = SvgUri;

@@ -1,5 +1,5 @@
 {
-  "name": "react-native-svg-uri",
+  "name": "@chrishenderson/react-native-svg-uri",
   "version": "1.2.3",
   "description": "Render an SVG Image from an URL",
   "main": "index.js",
@@ -18,8 +18,12 @@
     "http"
   ],
   "author": "Matias Cortes",
+  "contributors": [
+    "Chris Henderson <cwhenderson20@gmail.com>"
+  ],
   "license": "ISC",
   "dependencies": {
+    "prop-types": "^15.6.0",
     "xmldom": "^0.1.22"
   },
   "peerDependencies": {
