@@ -150,9 +150,9 @@ class SvgUri extends Component{
 
   // Remove empty strings from children array
   trimElementChilden(children) {
-    for (child of children) {
+    for (child of [...children]) {
       if (typeof child === 'string') {
-        if (child.trim.length === 0)
+        if (child.trim().length === 0)
           children.splice(children.indexOf(child), 1);
       }
     }
